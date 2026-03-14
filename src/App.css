@@ -1,0 +1,276 @@
+.app-shell {
+  --accent: #7dd3fc;
+  --accent-soft: rgba(125, 211, 252, 0.3);
+  --mist-a: rgba(56, 189, 248, 0.22);
+  --mist-b: rgba(168, 85, 247, 0.22);
+  --bg-a: rgba(56, 189, 248, 0.2);
+  --bg-b: rgba(168, 85, 247, 0.19);
+  --bg-c: rgba(30, 41, 59, 0.68);
+  min-height: 100vh;
+  padding: 1rem;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 20% 20%, var(--bg-a), transparent 40%),
+    radial-gradient(circle at 80% 0%, var(--bg-b), transparent 36%),
+    radial-gradient(circle at 50% 100%, var(--bg-c), transparent 50%),
+    #05070f;
+}
+
+.scene-ember {
+  --accent: #fb923c;
+  --accent-soft: rgba(251, 146, 60, 0.28);
+  --mist-a: rgba(239, 68, 68, 0.23);
+  --mist-b: rgba(249, 115, 22, 0.2);
+  --bg-a: rgba(127, 29, 29, 0.45);
+  --bg-b: rgba(194, 65, 12, 0.3);
+  --bg-c: rgba(23, 6, 4, 0.84);
+}
+
+.scene-tide {
+  --accent: #67e8f9;
+  --accent-soft: rgba(103, 232, 249, 0.26);
+  --mist-a: rgba(14, 116, 144, 0.24);
+  --mist-b: rgba(37, 99, 235, 0.19);
+  --bg-a: rgba(30, 64, 175, 0.35);
+  --bg-b: rgba(8, 145, 178, 0.32);
+  --bg-c: rgba(3, 7, 18, 0.82);
+}
+
+.mist-layer {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 30% 30%, var(--mist-a), transparent 32%),
+    radial-gradient(circle at 70% 65%, var(--mist-b), transparent 38%);
+  filter: blur(32px);
+  animation: drift 22s linear infinite;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.mist-layer.second {
+  animation-duration: 30s;
+  animation-direction: reverse;
+  opacity: 0.7;
+}
+
+.timer-card {
+  width: min(720px, 100%);
+  padding: 1.35rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(3, 7, 18, 0.48);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  opacity: 0.76;
+}
+
+h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+}
+
+.subtitle {
+  margin-top: 0.2rem;
+  opacity: 0.85;
+}
+
+.rhyme {
+  margin-top: 0.95rem;
+  text-align: center;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+.orbit {
+  --progress-angle: 0deg;
+  width: min(320px, 78vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  margin: 1.05rem auto 0;
+  display: grid;
+  place-items: center;
+  background:
+    conic-gradient(var(--accent) var(--progress-angle), rgba(255, 255, 255, 0.13) 0),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 0 34px var(--accent-soft);
+}
+
+.orbit-core {
+  width: 79%;
+  aspect-ratio: 1 / 1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.25), transparent 45%),
+    rgba(4, 8, 21, 0.92);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45) inset;
+}
+
+.running .orbit {
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+.clock {
+  margin: -10.5rem 0 0;
+  text-align: center;
+  font-size: clamp(2.5rem, 9vw, 4.8rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-wrap {
+  margin-top: 1rem;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), #f8fafc);
+  transition: width 0.2s linear;
+}
+
+.meta {
+  margin-top: 0.62rem;
+  opacity: 0.84;
+  font-size: 0.9rem;
+}
+
+.top-meta {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.actions,
+.scene-row,
+.preset-row {
+  margin-top: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.56rem;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.56rem 0.95rem;
+  font: inherit;
+  cursor: pointer;
+  color: #020617;
+  background: #f8fafc;
+}
+
+button.secondary {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #e2e8f0;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+button.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft) inset;
+}
+
+.custom-time {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.56rem;
+}
+
+.custom-time label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.86rem;
+}
+
+input {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(148, 163, 184, 0.15);
+  color: inherit;
+  font: inherit;
+  padding: 0.44rem 0.58rem;
+}
+
+.shortcuts {
+  text-align: center;
+}
+
+.immersive .timer-card {
+  width: min(860px, 100%);
+  padding: 1.6rem;
+}
+
+.immersive .clock {
+  font-size: clamp(3.5rem, 12vw, 6.8rem);
+}
+
+.immersive .orbit {
+  width: min(420px, 88vw);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.018);
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (max-width: 720px) {
+  .clock {
+    margin-top: -8.1rem;
+  }
+
+  .header-row {
+    flex-direction: column;
+  }
+
+  .top-meta {
+    white-space: initial;
+  }
+
+  .custom-time {
+    grid-template-columns: 1fr;
+  }
+}
