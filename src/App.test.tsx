@@ -35,7 +35,7 @@ describe('TimeRhymer timer', () => {
     const [minutesInput, secondsInput] = screen.getAllByRole('textbox')
     fireEvent.change(minutesInput, { target: { value: '0' } })
     fireEvent.change(secondsInput, { target: { value: '03' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Set custom timer' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Set custom timer' })[0])
 
     expect(screen.getByText('00:03')).toBeTruthy()
 
