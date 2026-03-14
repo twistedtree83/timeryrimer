@@ -1,6 +1,6 @@
 import { act } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import App from './App'
 
 describe('TimeRhymer timer', () => {
@@ -11,6 +11,7 @@ describe('TimeRhymer timer', () => {
   afterEach(() => {
     vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    cleanup()
   })
 
   it('counts down after starting and resets to original duration', () => {
