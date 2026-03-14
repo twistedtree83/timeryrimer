@@ -1,6 +1,6 @@
 # TimeRhymer
 
-TimeRhymer is a simple productivity timer app built with React + TypeScript + Vite.
+TimeRhymer is an immersive productivity timer app built with React + TypeScript + Vite.
 
 ## Features
 
@@ -10,6 +10,13 @@ TimeRhymer is a simple productivity timer app built with React + TypeScript + Vi
 - Progress bar with completion percentage
 - Session counter for completed rounds
 - Rotating motivational rhyme while the timer runs
+- Three animated visual scenes (Aurora Bloom, Ember Night, Moon Tide)
+- Immersive mode + fullscreen toggle
+- Completion chime and keyboard shortcuts
+
+## Live on GitHub Pages
+
+https://twistedtree83.github.io/timeryrimer/
 
 ## Run locally
 

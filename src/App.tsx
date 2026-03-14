@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import './App.css'
 
 type TimerPreset = {
@@ -7,10 +7,22 @@ type TimerPreset = {
   seconds: number
 }
 
+type Scene = {
+  id: string
+  name: string
+  mood: string
+}
+
 const PRESETS: TimerPreset[] = [
   { label: 'Focus · 25m', seconds: 25 * 60 },
   { label: 'Short Break · 5m', seconds: 5 * 60 },
   { label: 'Long Break · 15m', seconds: 15 * 60 },
+]
+
+const SCENES: Scene[] = [
+  { id: 'aurora', name: 'Aurora Bloom', mood: 'Cool colors and calm momentum.' },
+  { id: 'ember', name: 'Ember Night', mood: 'Warm glow for deep concentration.' },
+  { id: 'tide', name: 'Moon Tide', mood: 'Ocean-like drift with gentle contrast.' },
 ]
 
 const RHYMES = [
@@ -35,6 +47,46 @@ function App() {
   const [sessionsCompleted, setSessionsCompleted] = useState(0)
   const [customMinutes, setCustomMinutes] = useState('10')
   const [customSeconds, setCustomSeconds] = useState('00')
+  const [sceneId, setSceneId] = useState(SCENES[0].id)
+  const [isImmersive, setIsImmersive] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
+  const selectedScene = useMemo(
+    () => SCENES.find((scene) => scene.id === sceneId) ?? SCENES[0],
+    [sceneId],
+  )
+
+  const playCompletionChime = useCallback(() => {
+    const AudioContextClass = window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) {
+      return
+    }
+
+    const context = new AudioContextClass()
+    const now = context.currentTime
+    const notes = [523.25, 659.25, 783.99]
+
+    notes.forEach((frequency, index) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const noteStart = now + index * 0.18
+
+      oscillator.type = 'sine'
+      oscillator.frequency.value = frequency
+      gain.gain.setValueAtTime(0, noteStart)
+      gain.gain.linearRampToValueAtTime(0.13, noteStart + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.28)
+
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start(noteStart)
+      oscillator.stop(noteStart + 0.3)
+    })
+
+    window.setTimeout(() => {
+      void context.close()
+    }, 1200)
+  }, [])
 
   useEffect(() => {
     if (!isRunning) {
@@ -55,7 +107,19 @@ function App() {
 
     setIsRunning(false)
     setSessionsCompleted((value) => value + 1)
-  }, [isRunning, remainingSeconds])
+    playCompletionChime()
+  }, [isRunning, playCompletionChime, remainingSeconds])
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement))
+    }
+
+    handleFullscreenChange()
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
 
   const progress = useMemo(() => {
     if (totalSeconds === 0) {
@@ -65,12 +129,35 @@ function App() {
     return Math.round(((totalSeconds - remainingSeconds) / totalSeconds) * 100)
   }, [remainingSeconds, totalSeconds])
 
-  const activeRhyme = RHYMES[remainingSeconds % RHYMES.length]
+  const activeRhyme = RHYMES[(remainingSeconds + sessionsCompleted) % RHYMES.length]
 
-  const applyTimer = (seconds: number) => {
+  const applyTimer = useCallback((seconds: number) => {
     setTotalSeconds(seconds)
     setRemainingSeconds(seconds)
     setIsRunning(false)
+  }, [])
+
+  const resetTimer = useCallback(() => {
+    applyTimer(totalSeconds)
+  }, [applyTimer, totalSeconds])
+
+  const toggleStartPause = useCallback(() => {
+    if (remainingSeconds === 0) {
+      setRemainingSeconds(totalSeconds)
+      setIsRunning(true)
+      return
+    }
+
+    setIsRunning((value) => !value)
+  }, [remainingSeconds, totalSeconds])
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      return
+    }
+
+    await document.exitFullscreen()
   }
 
   const handleCustomSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -92,16 +179,57 @@ function App() {
     const total = minutes * 60 + seconds
     if (total > 0) {
       applyTimer(total)
+      setCustomSeconds(String(seconds).padStart(2, '0'))
     }
   }
 
-  return (
-    <main className="app-shell">
-      <section className="timer-card">
-        <p className="eyebrow">TimeRhymer</p>
-        <h1>Make every minute count</h1>
-        <p className="subtitle">{activeRhyme}</p>
+  useEffect(() => {
+    const handleHotkeys = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        return
+      }
 
+      const key = event.key.toLowerCase()
+      if (event.code === 'Space') {
+        event.preventDefault()
+        toggleStartPause()
+      } else if (key === 'r') {
+        event.preventDefault()
+        resetTimer()
+      } else if (key === 'f') {
+        event.preventDefault()
+        setIsImmersive((value) => !value)
+      }
+    }
+
+    window.addEventListener('keydown', handleHotkeys)
+    return () => window.removeEventListener('keydown', handleHotkeys)
+  }, [resetTimer, toggleStartPause])
+
+  const orbitStyle = {
+    '--progress-angle': `${Math.max(progress, 1) * 3.6}deg`,
+  } as CSSProperties
+
+  return (
+    <main className={`app-shell scene-${selectedScene.id} ${isImmersive ? 'immersive' : ''}`}>
+      <div className="mist-layer" aria-hidden="true" />
+      <div className="mist-layer second" aria-hidden="true" />
+      <section className={`timer-card ${isRunning ? 'running' : ''}`}>
+        <header className="header-row">
+          <div>
+            <p className="eyebrow">TimeRhymer</p>
+            <h1>{selectedScene.name}</h1>
+            <p className="subtitle">{selectedScene.mood}</p>
+          </div>
+          <p className="meta top-meta">Sessions today: {sessionsCompleted}</p>
+        </header>
+
+        <p className="rhyme">{activeRhyme}</p>
+
+        <div className="orbit" style={orbitStyle} aria-hidden="true">
+          <div className="orbit-core" />
+        </div>
         <p className="clock" aria-live="polite">
           {formatTime(remainingSeconds)}
         </p>
@@ -112,51 +240,74 @@ function App() {
         <p className="meta">{progress}% complete</p>
 
         <div className="actions">
-          <button type="button" onClick={() => setIsRunning((value) => !value)}>
+          <button type="button" onClick={toggleStartPause}>
             {isRunning ? 'Pause' : 'Start'}
           </button>
-          <button type="button" className="secondary" onClick={() => applyTimer(totalSeconds)}>
+          <button type="button" className="secondary" onClick={resetTimer}>
             Reset
           </button>
-        </div>
-
-        <div className="preset-row" role="group" aria-label="Timer presets">
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              className="secondary"
-              onClick={() => applyTimer(preset.seconds)}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-
-        <form className="custom-time" onSubmit={handleCustomSubmit}>
-          <label>
-            Minutes
-            <input
-              value={customMinutes}
-              onChange={(event) => setCustomMinutes(event.target.value)}
-              inputMode="numeric"
-            />
-          </label>
-          <label>
-            Seconds
-            <input
-              value={customSeconds}
-              onChange={(event) => setCustomSeconds(event.target.value)}
-              inputMode="numeric"
-            />
-          </label>
-          <button type="submit" className="secondary">
-            Set custom timer
+          <button type="button" className="secondary" onClick={() => setIsImmersive((value) => !value)}>
+            {isImmersive ? 'Exit immersive' : 'Immersive mode'}
           </button>
-        </form>
+          <button type="button" className="secondary" onClick={toggleFullscreen}>
+            {isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          </button>
+        </div>
 
-        <p className="meta">
-          Sessions completed today: <strong>{sessionsCompleted}</strong>
+        {!isImmersive && (
+          <>
+            <div className="scene-row" role="group" aria-label="Visual scenes">
+              {SCENES.map((scene) => (
+                <button
+                  key={scene.id}
+                  type="button"
+                  className={scene.id === selectedScene.id ? 'secondary active' : 'secondary'}
+                  onClick={() => setSceneId(scene.id)}
+                >
+                  {scene.name}
+                </button>
+              ))}
+            </div>
+
+            <div className="preset-row" role="group" aria-label="Timer presets">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  className="secondary"
+                  onClick={() => applyTimer(preset.seconds)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            <form className="custom-time" onSubmit={handleCustomSubmit}>
+              <label>
+                Minutes
+                <input
+                  value={customMinutes}
+                  onChange={(event) => setCustomMinutes(event.target.value)}
+                  inputMode="numeric"
+                />
+              </label>
+              <label>
+                Seconds
+                <input
+                  value={customSeconds}
+                  onChange={(event) => setCustomSeconds(event.target.value)}
+                  inputMode="numeric"
+                />
+              </label>
+              <button type="submit" className="secondary">
+                Set custom timer
+              </button>
+            </form>
+          </>
+        )}
+
+        <p className="meta shortcuts">
+          Shortcuts: <strong>Space</strong> start/pause · <strong>R</strong> reset · <strong>F</strong> immersive
         </p>
       </section>
     </main>
